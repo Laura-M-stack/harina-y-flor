@@ -1,0 +1,88 @@
+---
+import { DIAS, capitalizar, hhmm, HORARIO } from '../lib/horno';
+import { PRODUCTOS } from '../data/site';
+
+// Martes primero y domingo al final: así se lee una semana de atención (el lunes no abre).
+const orden = [2, 3, 4, 5, 6, 0];
+const cortos = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+---
+
+<section class="section section--crema" id="hoy" aria-labelledby="hoy-title">
+  <div class="container">
+    <p class="eyebrow">Del horno</p>
+    <h2 class="section__title" id="hoy-title">Qué sale cada día</h2>
+    <p class="section__lead" data-hoy-texto>
+      No todo se hornea todos los días: la focaccia es de viernes y sábado, y los scones llegan a mitad de semana. Los lunes descansamos.
+    </p>
+
+    <div class="tabla-wrap">
+      <table class="tabla">
+        <caption class="sr-only">Días de la semana en que sale del horno cada producto</caption>
+        <thead>
+          <tr>
+            <th scope="col">Producto</th>
+            {
+              orden.map((d) => (
+                <th scope="col" data-dia={d}>
+                  <span aria-hidden="true">{cortos[d]}</span>
+                  <span class="sr-only">{capitalizar(DIAS[d] as string)}</span>
+                </th>
+              ))
+            }
+          </tr>
+        </thead>
+        <tbody>
+          {
+            PRODUCTOS.map((p) => (
+              <tr>
+                <th scope="row">{p.nombre}</th>
+                {
+                  orden.map((d) => (
+                    <td data-dia={d}>
+                      {p.dias.includes(d) ? (
+                        <>
+                          <span class="punto" aria-hidden="true" />
+                          <span class="sr-only">Sale</span>
+                        </>
+                      ) : (
+                        <>
+                          <span class="guion" aria-hidden="true">·</span>
+                          <span class="sr-only">No sale</span>
+                        </>
+                      )}
+                    </td>
+                  ))
+                }
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="nota">Horarios: martes a sábado de {hhmm((HORARIO[2] as { abre: number }).abre)} a {hhmm((HORARIO[2] as { cierra: number }).cierra)}; domingos de {hhmm((HORARIO[0] as { abre: number }).abre)} a {hhmm((HORARIO[0] as { cierra: number }).cierra)}.</p>
+  </div>
+</section>
+
+<script>
+  import { DIAS, capitalizar, estadoAhora, productosDelDia, relojLocal } from '../lib/horno';
+
+  const { dia } = relojLocal(new Date());
+  document.querySelectorAll<HTMLElement>('[data-dia]').forEach((c) => {
+    if (Number(c.dataset.dia) === dia) {
+      c.dataset.hoy = 'true';
+      if (c.tagName === 'TH') c.setAttribute('aria-current', 'date');
+    }
+  });
+
+  const texto = document.querySelector<HTMLElement>('[data-hoy-texto]');
+  if (texto) {
+    const lista = productosDelDia(dia).map((p) => p.nombre.toLowerCase());
+    if (lista.length === 0) {
+      texto.textContent = `Hoy, ${DIAS[dia]}, descansamos. ${estadoAhora().texto.replace('Cerrado · ', '')}.`;
+    } else {
+      const ult = lista.pop();
+      const junto = lista.length ? `${lista.join(', ')} y ${ult}` : ult;
+      texto.textContent = `${capitalizar(DIAS[dia] as string)}: hoy salen ${junto}.`;
+    }
+  }
+</script>

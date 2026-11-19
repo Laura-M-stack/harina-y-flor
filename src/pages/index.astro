@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import DemoBanner from '../components/DemoBanner.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import Horno from '../components/Horno.astro';
+import Carta from '../components/Carta.astro';
+import Torta from '../components/Torta.astro';
+import Historia from '../components/Historia.astro';
+import Visita from '../components/Visita.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+---
+
+<Base
+  title={`${site.nombre} · Panadería y tortas por encargo`}
+  description="Panadería de barrio con masa madre, medialunas y tortas por encargo. Mirá qué sale del horno cada día y armá tu torta. Sitio de demostración."
+>
+  <DemoBanner />
+  <Header />
+  <main id="contenido">
+    <Hero />
+    <Horno />
+    <Carta />
+    <Torta />
+    <Historia />
+    <Visita />
+  </main>
+  <Footer />
+</Base>

@@ -1,0 +1,23 @@
+---
+import Ilu from './Ilu.astro';
+import { site } from '../data/site';
+
+const links = [
+  { href: '#hoy', label: 'Hoy' },
+  { href: '#carta', label: 'Carta' },
+  { href: '#tortas', label: 'Tortas' },
+  { href: '#visita', label: 'Visita' },
+];
+---
+
+<header class="header">
+  <div class="container header__bar">
+    <a class="brand" href="#top" aria-label={`${site.nombre}, inicio`}>
+      <Ilu nombre="flor" class="brand__mark" />
+      <span class="brand__name">Harina <em>&amp;</em> Flor</span>
+    </a>
+    <nav class="nav" aria-label="Principal">
+      {links.map((l) => <a class="nav__link" href={l.href}>{l.label}</a>)}
+    </nav>
+  </div>
+</header>

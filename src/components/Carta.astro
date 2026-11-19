@@ -1,0 +1,35 @@
+---
+import { CATEGORIAS, PRODUCTOS } from '../data/site';
+import { pesos } from '../lib/torta';
+---
+
+<section class="section" id="carta" aria-labelledby="carta-title">
+  <div class="container">
+    <p class="eyebrow">La carta</p>
+    <h2 class="section__title" id="carta-title">Lo de todos los días</h2>
+
+    <div class="carta">
+      {
+        CATEGORIAS.map((c) => (
+          <div class="carta__grupo">
+            <h3 class="carta__titulo">{c.titulo}</h3>
+            <ul class="carta__lista">
+              {
+                PRODUCTOS.filter((p) => p.categoria === c.id).map((p) => (
+                  <li class="item">
+                    <div class="item__head">
+                      <span class="item__nombre">{p.nombre}</span>
+                      <span class="item__puntos" aria-hidden="true" />
+                      <span class="item__precio">{pesos(p.precio)}</span>
+                    </div>
+                    <p class="item__desc">{p.descripcion}</p>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

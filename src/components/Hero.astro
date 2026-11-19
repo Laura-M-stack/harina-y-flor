@@ -1,0 +1,37 @@
+---
+import Ilu from './Ilu.astro';
+---
+
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <p class="eyebrow">Panadería de barrio</p>
+      <h1 id="hero-title">Pan, flores y <em>un poco de tiempo.</em></h1>
+      <p class="lead">
+        Masa madre que fermenta toda la noche, medialunas laminadas a mano y tortas para los días que importan. Abrimos temprano, porque el pan es mejor recién salido.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="#tortas">Encargar una torta</a>
+        <a class="link" href="#hoy">Ver qué sale hoy</a>
+      </div>
+      <p class="estado" data-estado aria-live="polite">Martes a sábado de 08:00 a 19:00, domingos de 08:00 a 14:00.</p>
+    </div>
+    <div class="hero__art">
+      <Ilu nombre="escena" class="hero__ilu" />
+    </div>
+  </div>
+</section>
+
+<script>
+  import { estadoAhora } from '../lib/horno';
+
+  const el = document.querySelector<HTMLElement>('[data-estado]');
+  function pintar() {
+    if (!el) return;
+    const e = estadoAhora();
+    el.textContent = e.texto;
+    el.dataset.abierto = String(e.abierto);
+  }
+  pintar();
+  setInterval(pintar, 60_000);
+</script>

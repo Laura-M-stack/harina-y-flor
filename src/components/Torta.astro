@@ -1,0 +1,199 @@
+---
+import Ilu from './Ilu.astro';
+import { DECORACIONES, MAX_TEXTO, PORCIONES, RELLENOS, SABORES, ANTICIPACION_DIAS } from '../lib/torta';
+---
+
+<section class="section section--durazno" id="tortas" aria-labelledby="tortas-title">
+  <div class="container">
+    <div class="tortas">
+      <div class="tortas__info">
+        <p class="eyebrow">Tortas por encargo</p>
+        <h2 class="section__title" id="tortas-title">Armá tu torta</h2>
+        <p>
+          Elegí tamaño, sabor y decoración, y fijá el día de retiro. Necesitamos {ANTICIPACION_DIAS} días de anticipación y los lunes no abrimos. El precio se calcula mientras elegís.
+        </p>
+        <Ilu nombre="torta" class="tortas__ilu" />
+      </div>
+
+      <form class="form" id="torta-form" novalidate>
+        <div class="field">
+          <label for="nombre">Tu nombre</label>
+          <input id="nombre" name="nombre" type="text" autocomplete="name" required aria-describedby="err-nombre" />
+          <p class="field__error" id="err-nombre"></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="porciones">Tamaño</label>
+            <select id="porciones" name="porciones" aria-describedby="err-porciones">
+              {PORCIONES.map((n) => <option value={n} selected={n === 12}>{n} porciones</option>)}
+            </select>
+            <p class="field__error" id="err-porciones"></p>
+          </div>
+          <div class="field">
+            <label for="sabor">Sabor</label>
+            <select id="sabor" name="sabor" aria-describedby="err-sabor">
+              {SABORES.map((s) => <option value={s.id}>{s.nombre}</option>)}
+            </select>
+            <p class="field__error" id="err-sabor"></p>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="relleno">Relleno</label>
+            <select id="relleno" name="relleno" aria-describedby="err-relleno">
+              {RELLENOS.map((r) => <option value={r.id}>{r.nombre}</option>)}
+            </select>
+            <p class="field__error" id="err-relleno"></p>
+          </div>
+          <div class="field">
+            <label for="decoracion">Decoración</label>
+            <select id="decoracion" name="decoracion" aria-describedby="err-decoracion">
+              {DECORACIONES.map((d) => <option value={d.id}>{d.nombre}</option>)}
+            </select>
+            <p class="field__error" id="err-decoracion"></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="texto">Mensaje en la torta <span class="field__opt">(opcional)</span></label>
+          <input id="texto" name="texto" type="text" maxlength={MAX_TEXTO} aria-describedby="ayuda-texto err-texto" autocomplete="off" />
+          <p class="field__help" id="ayuda-texto"><span data-contador>0</span> de {MAX_TEXTO} caracteres</p>
+          <p class="field__error" id="err-texto"></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="fecha">Día de retiro</label>
+            <input id="fecha" name="fecha" type="date" required aria-describedby="err-fecha" />
+            <p class="field__error" id="err-fecha"></p>
+          </div>
+          <div class="field">
+            <label for="hora">Horario</label>
+            <select id="hora" name="hora" required aria-describedby="err-hora">
+              <option value="">Elegí primero el día</option>
+            </select>
+            <p class="field__error" id="err-hora"></p>
+          </div>
+        </div>
+
+        <p class="total" aria-live="polite">Total estimado: <strong data-total>—</strong></p>
+
+        <button class="btn btn--primary" type="submit">Armar mi encargo</button>
+
+        <div class="resultado" data-resultado hidden tabindex="-1">
+          <h3 class="resultado__titulo" data-resultado-titulo tabindex="-1">Tu encargo está listo</h3>
+          <pre class="resultado__texto" data-resumen></pre>
+          <button class="btn btn--ghost" type="button" data-copiar>Copiar pedido</button>
+          <p class="field__help" data-copiado role="status"></p>
+          <p class="nota">Es una demostración: este pedido no se envía a ningún lado. En una panadería real, este texto se mandaría por WhatsApp.</p>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  import {
+    fechaMaxima, fechaMinima, horariosRetiro, pesos, precio, resumen, validar, type Encargo,
+  } from '../lib/torta';
+
+  const form = document.querySelector<HTMLFormElement>('#torta-form');
+  if (form) iniciar(form);
+
+  function iniciar(form: HTMLFormElement) {
+    const $ = <T extends HTMLElement>(sel: string) => form.querySelector<T>(sel) as T;
+    const campo = (n: string) => form.elements.namedItem(n) as HTMLInputElement | HTMLSelectElement;
+    const fecha = campo('fecha') as HTMLInputElement;
+    const hora = campo('hora') as HTMLSelectElement;
+    const texto = campo('texto') as HTMLInputElement;
+    const total = $('[data-total]');
+    const contador = $('[data-contador]');
+    const resultado = $('[data-resultado]');
+
+    fecha.min = fechaMinima();
+    fecha.max = fechaMaxima();
+
+    function leer(): Encargo {
+      return {
+        nombre: campo('nombre').value,
+        porciones: Number(campo('porciones').value),
+        sabor: campo('sabor').value,
+        relleno: campo('relleno').value,
+        decoracion: campo('decoracion').value,
+        texto: texto.value,
+        fecha: fecha.value,
+        hora: hora.value,
+      };
+    }
+
+    function pintarTotal() {
+      const p = precio(leer());
+      total.textContent = p === null ? '—' : pesos(p);
+    }
+
+    function pintarHorarios() {
+      const previo = hora.value;
+      const lista = horariosRetiro(fecha.value);
+      hora.replaceChildren();
+      if (lista.length === 0) {
+        const o = new Option(fecha.value ? 'Ese día no abrimos' : 'Elegí primero el día', '');
+        hora.add(o);
+        return;
+      }
+      hora.add(new Option('Elegí un horario', ''));
+      for (const h of lista) hora.add(new Option(`${h} h`, h));
+      if (lista.includes(previo)) hora.value = previo;
+    }
+
+    function limpiarErrores() {
+      form.querySelectorAll<HTMLElement>('.field__error').forEach((p) => (p.textContent = ''));
+      form.querySelectorAll<HTMLElement>('[aria-invalid]').forEach((i) => i.removeAttribute('aria-invalid'));
+    }
+
+    form.addEventListener('input', (ev) => {
+      const t = ev.target as HTMLElement;
+      if (t === texto) contador.textContent = String(texto.value.length);
+      if (t === fecha) pintarHorarios();
+      pintarTotal();
+      resultado.hidden = true;
+    });
+
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      limpiarErrores();
+      const datos = leer();
+      const errores = validar(datos);
+      const claves = Object.keys(errores) as (keyof Encargo)[];
+      if (claves.length > 0) {
+        resultado.hidden = true;
+        for (const k of claves) {
+          campo(k).setAttribute('aria-invalid', 'true');
+          const msg = form.querySelector<HTMLElement>(`#err-${k}`);
+          if (msg) msg.textContent = errores[k] ?? '';
+        }
+        campo(claves[0] as string).focus();
+        return;
+      }
+      $('[data-resumen]').textContent = resumen(datos);
+      $('[data-copiado]').textContent = '';
+      resultado.hidden = false;
+      $('[data-resultado-titulo]').focus();
+    });
+
+    $('[data-copiar]').addEventListener('click', async () => {
+      const aviso = $('[data-copiado]');
+      const txt = $('[data-resumen]').textContent ?? '';
+      try {
+        await navigator.clipboard.writeText(txt);
+        aviso.textContent = 'Copiado. Ya lo podés pegar donde quieras.';
+      } catch {
+        aviso.textContent = 'No pudimos copiarlo solo. Seleccioná el texto y copialo a mano.';
+      }
+    });
+
+    pintarHorarios();
+    pintarTotal();
+  }
+</script>

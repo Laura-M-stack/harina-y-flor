@@ -1,0 +1,44 @@
+---
+import { DIAS, HORARIO, capitalizar, hhmm } from '../lib/horno';
+import { site } from '../data/site';
+
+const orden = [1, 2, 3, 4, 5, 6, 0];
+const filas = orden.map((d) => {
+  const f = HORARIO[d];
+  return { dia: d, nombre: capitalizar(DIAS[d] as string), texto: f ? `${hhmm(f.abre)} a ${hhmm(f.cierra)}` : 'Descansamos' };
+});
+---
+
+<section class="section" id="visita" aria-labelledby="visita-title">
+  <div class="container visita">
+    <div>
+      <p class="eyebrow">Visitanos</p>
+      <h2 class="section__title" id="visita-title">Pasá a buscar tu pan</h2>
+      <address class="direccion">
+        {site.direccion}<br />
+        {site.telefono}<br />
+        {site.instagram}
+      </address>
+      <p class="nota">Los datos de contacto son de ejemplo.</p>
+    </div>
+    <dl class="horario" aria-label="Horarios de atención">
+      {
+        filas.map((f) => (
+          <div class="horario__fila" data-dia={f.dia}>
+            <dt>{f.nombre}</dt>
+            <dd>{f.texto}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<script>
+  import { relojLocal } from '../lib/horno';
+
+  const { dia } = relojLocal(new Date());
+  document.querySelectorAll<HTMLElement>('.horario__fila').forEach((f) => {
+    if (Number(f.dataset.dia) === dia) f.dataset.hoy = 'true';
+  });
+</script>
